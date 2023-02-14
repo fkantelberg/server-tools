@@ -50,7 +50,7 @@ class Serializer(models.Model):
         "the matching record. All mapped fields of the model can be used as variables",
     )
     import_create = fields.Selection(
-        [("create", _("Create")), ("skip", _("Skip"), ("exception", _("Exception")))],
+        [("create", _("Create")), ("skip", _("Skip")), ("exception", _("Exception"))],
         help="Create records on import",
     )
     base_serializer_id = fields.Many2one(
