@@ -348,7 +348,7 @@ class TestSerializer(TransactionCase):
             {
                 "import_domain": "[('ref', '=', ref)]",
                 "use_sync_date": False,
-                "import_create": False,
+                "import_create": "exception",
                 "field_ids": [
                     self._create_field("name"),
                     self._create_field("ref"),
@@ -379,7 +379,7 @@ class TestSerializer(TransactionCase):
         with self.assertRaises(ValidationError):
             self.serializer.import_deserialized(data)
 
-        self.serializer.import_create = True
+        self.serializer.import_create = "create"
         rec = self.serializer.import_deserialized(data)
         self.assertEqual([rec.name, rec.ref], ["Test 1", "new"])
         self.assertNotEqual(rec, self.partner)
@@ -438,7 +438,7 @@ class TestSerializer(TransactionCase):
     def test_inheritance_serialize(self):
         self.serializer.write(
             {
-                "import_create": False,
+                "import_create": "exception",
                 "import_domain": "[('ref', '=', ref)]",
                 "use_sync_date": False,
                 "field_ids": [
@@ -450,7 +450,7 @@ class TestSerializer(TransactionCase):
         serializer = self.serializer.copy({"name": "Copy Test"})
         serializer.write(
             {
-                "import_create": False,
+                "import_create": "exception",
                 "base_serializer_id": self.serializer.id,
                 "field_ids": [(5,)],
             }
@@ -466,7 +466,7 @@ class TestSerializer(TransactionCase):
     def test_inheritance_deserialize(self):
         self.serializer.write(
             {
-                "import_create": False,
+                "import_create": "exception",
                 "import_domain": "[('ref', '=', ref)]",
                 "use_sync_date": False,
                 "field_ids": [
@@ -478,7 +478,7 @@ class TestSerializer(TransactionCase):
         serializer = self.serializer.copy({"name": "Copy Test"})
         serializer.write(
             {
-                "import_create": False,
+                "import_create": "exception",
                 "base_serializer_id": self.serializer.id,
                 "field_ids": [(5,)],
             }
@@ -492,7 +492,7 @@ class TestSerializer(TransactionCase):
     def test_inheritance_import(self):
         self.serializer.write(
             {
-                "import_create": False,
+                "import_create": "exception",
                 "import_domain": "[('ref', '=', ref)]",
                 "use_sync_date": False,
                 "field_ids": [
@@ -504,7 +504,7 @@ class TestSerializer(TransactionCase):
         serializer = self.serializer.copy({"name": "Copy Test"})
         serializer.write(
             {
-                "import_create": False,
+                "import_create": "exception",
                 "base_serializer_id": self.serializer.id,
                 "field_ids": [(5,)],
             }
@@ -517,8 +517,8 @@ class TestSerializer(TransactionCase):
         self.assertEqual(self.partner.name, "other name")
 
         second = serializer.copy({"name": "Copy Test 2"})
-        serializer.import_create = True
-        second.import_create = False
+        serializer.import_create = "create"
+        second.import_create = "exception"
         data = [{"name": "invalid", "ref": "new_ref"}]
         self.assertFalse(second.field_ids)
         with self.assertRaises(ValidationError):

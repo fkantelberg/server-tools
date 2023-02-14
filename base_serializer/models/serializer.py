@@ -49,7 +49,8 @@ class Serializer(models.Model):
         help="During the import of deserialized data this domain is used to find "
         "the matching record. All mapped fields of the model can be used as variables",
     )
-    import_create = fields.Boolean(
+    import_create = fields.Selection(
+        [("create", _("Create")), ("skip", _("Skip"), ("exception", _("Exception")))],
         help="Create records on import",
     )
     base_serializer_id = fields.Many2one(
@@ -271,7 +272,7 @@ class Serializer(models.Model):
         if self.base_serializer_id:
             related = self.base_serializer_id
             if self.env.context.get("skip_no_create") is None:
-                related = related.with_context(skip_no_create=not self.import_create)
+                related = related.with_context(skip_no_create=self.import_create)
 
             records = related.import_deserialized(content)
         else:
@@ -283,10 +284,10 @@ class Serializer(models.Model):
             if rec:
                 writable = self._import_deserialized(values)
                 rec.write(writable)
-            elif self.import_create:
+            elif self.import_create == "create":
                 writable = self._import_deserialized(values)
                 rec = rec.create(writable)
-            elif not self.env.context.get("skip_no_create"):
+            elif self.env.context.get("skip_no_create") == "exception":
                 _logger.error(f"Import not allowed {self}: {content}")
                 raise ValidationError(_("No matching record found"))
             records |= rec
@@ -319,10 +320,10 @@ class Serializer(models.Model):
                     rec = related.import_deserialized(val)
                     if rec:
                         changes.append((4, rec.id))
-                    elif self.import_create:
+                    elif self.import_create == "create":
                         rec_vals = related._import_deserialized(val)
                         changes.append((0, 0, rec_vals))
-                    elif not self.env.context.get("skip_no_create"):
+                    elif related.import_create == "exception":
                         _logger.error(f"Import not allowed {self}: {content}")
                         raise ValidationError(_("No matching record found"))
 
