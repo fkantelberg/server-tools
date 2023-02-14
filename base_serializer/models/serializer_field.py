@@ -34,14 +34,6 @@ class SerializerField(models.Model):
     importing = fields.Boolean("Import", default=True)
     exporting = fields.Boolean("Export", default=True)
 
-    _sql_constraints = [
-        (
-            "sync_field_uniq",
-            "UNIQUE(serializer_id, field_id)",
-            _("A field can only be mapped once"),
-        )
-    ]
-
     @api.depends("field_id")
     def _compute_related(self):
         for rec in self:
