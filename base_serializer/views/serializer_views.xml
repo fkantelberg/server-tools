@@ -86,6 +86,21 @@
                             </group>
                         </page>
                         <page
+                            name="export_domain"
+                            string="Filtering Domain"
+                            attrs="{'invisible': [('exporting', '=', False)]}"
+                        >
+                            <div>
+                                This domain is used to filter the records during the serialization.
+                            </div>
+                            <group>
+                                <field
+                                    name="export_domain"
+                                    attrs="{'required': [('exporting', '=', True)]}"
+                                />
+                            </group>
+                        </page>
+                        <page
                             name="export_snippet"
                             string="Export Snippet"
                             attrs="{'invisible': ['|', ('use_snippet', '=', False), ('exporting', '=', False)]}"

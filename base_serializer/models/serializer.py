@@ -35,6 +35,11 @@ class Serializer(models.Model):
         default=lambda self: self._get_default_code("export"),
         help="This snippet is additionally used to serialize the content",
     )
+    export_domain = fields.Text(
+        default="[]",
+        help="This domains is used to filter the records which needs to be "
+        "serialized",
+    )
     import_code = fields.Text(
         default=lambda self: self._get_default_code("import"),
         help="This snippet is additionally used to deserialize the content",
@@ -82,6 +87,23 @@ class Serializer(models.Model):
                     names.add(field.name)
                 else:
                     names.add(field.field_id.name)
+
+    @api.constrains("export_domain")
+    def _check_filter(self):
+        for rec in self:
+            if not rec.export_domain:
+                continue
+
+            try:
+                domain = rec._get_export_domain()
+            except Exception as e:
+                _logger.exception(e)
+                raise ValidationError(
+                    _("Invalid filter. See the following error:\n%s") % e
+                ) from e
+
+            if not isinstance(domain, (list, tuple)):
+                raise ValidationError(_("Invalid domain"))
 
     @api.constrains("import_domain")
     def _check_domain(self):
@@ -144,6 +166,22 @@ class Serializer(models.Model):
             "time": safe_eval.time,
             "UserError": UserError,
         }
+
+    def _get_filter_context(self):
+        self.ensure_one()
+        return {
+            "datetime": safe_eval.datetime,
+            "ref": self._get_id,
+            "time": safe_eval.time,
+        }
+
+    def _get_id(self, xmlid, raise_if_not_found=True):
+        rec = self.env.ref(xmlid, raise_if_not_found)
+        return rec.id if rec else False
+
+    def _get_export_domain(self):
+        self.ensure_one()
+        return safe_eval.safe_eval(self.export_domain, self._get_filter_context())
 
     def _get_import_domain(self, values):
         self.ensure_one()
@@ -302,6 +340,10 @@ class Serializer(models.Model):
             include_empty_keys=self.include_empty_keys,
             raise_on_duplicate=self.raise_on_duplicate,
         )
+
+        if self.export_domain:
+            records = records.filtered_domain(self._get_export_domain())
+
         data = list(map(self_ctx._serialize, records))
         return json.dumps(data) if jsonify else data
 
