@@ -247,7 +247,7 @@ class Serializer(models.Model):
         # Get the required fields
         required = set()
         for field in self.field_ids.filtered("importing"):
-            if field.required or field.field_id.required:
+            if field.required:
                 required.add(field.field_id.name)
 
         for key, value in content.items():
