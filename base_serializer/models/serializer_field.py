@@ -19,6 +19,10 @@ class SerializerField(models.Model):
     )
     model_id = fields.Many2one(related="serializer_id.model_id", store=True, index=True)
     related = fields.Boolean(compute="_compute_related", store=True)
+    required = fields.Boolean(
+        help="Makes the field required over the API additionally to the actual field "
+        "requirement",
+    )
     field_id = fields.Many2one(
         "ir.model.fields",
         domain="[('model_id', '=', model_id)]",

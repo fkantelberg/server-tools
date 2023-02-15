@@ -45,9 +45,14 @@ class Serializer(models.Model):
         help="This snippet is additionally used to deserialize the content",
     )
     import_domain = fields.Text(
+        "Matching Domain",
         default="[('id', '=', id)]",
         help="During the import of deserialized data this domain is used to find "
         "the matching record. All mapped fields of the model can be used as variables",
+    )
+    import_domain_vars = fields.Char(
+        "Matching Variables",
+        help="Comma separated list of additional variables for the matching domain",
     )
     import_create = fields.Selection(
         [("create", _("Create")), ("skip", _("Skip")), ("exception", _("Exception"))],
@@ -118,6 +123,11 @@ class Serializer(models.Model):
                 fields.search([("model_id", "=", rec.model_id.id)]).mapped("name"),
                 None,
             )
+            for variable in (rec.import_domain_vars or "").split(","):
+                variable = variable.strip()
+                if variable:
+                    val[variable] = None
+
             try:
                 domain = rec._get_import_domain(val)
             except Exception as e:
@@ -234,6 +244,12 @@ class Serializer(models.Model):
         else:
             result = {}
 
+        # Get the required fields
+        required = set()
+        for field in self.field_ids.filtered("importing"):
+            if field.required or field.field_id.required:
+                required.add(field.field_id.name)
+
         for key, value in content.items():
             domain = [
                 ("name", "=", key),
@@ -257,6 +273,11 @@ class Serializer(models.Model):
             ctx = self._get_eval_context()
             ctx.update({"content": content, "result": result})
             safe_eval.safe_eval(self.import_code, ctx, mode="exec", nocopy=True)
+
+        # Check against the required fields
+        required.difference_update(result)
+        if required:
+            raise ValidationError(_("Missing required fields %s", required))
 
         if self.use_sync_date and "sync_date" in content:
             result["sync_date"] = datetime.fromisoformat(content["sync_date"])

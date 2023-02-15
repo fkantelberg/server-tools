@@ -64,6 +64,7 @@
                                         name="related_serializer_id"
                                         attrs="{'invisible': [('related', '=', False)], 'required': [('related', '=', True)]}"
                                     />
+                                    <field name="required" />
                                     <field name="importing" />
                                     <field name="exporting" />
                                 </tree>
@@ -79,6 +80,7 @@
                                 You can use all fields defined before.
                             </div>
                             <group>
+                                <field name="import_domain_vars" />
                                 <field
                                     name="import_domain"
                                     attrs="{'required': [('importing', '=', True)]}"
