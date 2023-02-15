@@ -51,6 +51,7 @@ class Serializer(models.Model):
     )
     import_create = fields.Selection(
         [("create", _("Create")), ("skip", _("Skip")), ("exception", _("Exception"))],
+        default="exception",
         help="Create records on import",
     )
     base_serializer_id = fields.Many2one(
