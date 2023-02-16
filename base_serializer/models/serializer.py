@@ -175,6 +175,7 @@ class Serializer(models.Model):
         return {
             "datetime": safe_eval.datetime,
             "env": self.env,
+            "model": self.env[self.model_id.model],
             "time": safe_eval.time,
             "UserError": UserError,
         }
